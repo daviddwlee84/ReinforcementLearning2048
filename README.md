@@ -42,9 +42,13 @@ Use Traditional AI
 
 Simple Game Play
 
-* [gabrielecirulli/2048](https://github.com/gabrielecirulli/2048)
-    * [2048](https://play2048.co/)
-* [GetMIT](https://mitchgu.github.io/GetMIT/)
+* Python
+   * [yangshun/2048-python](https://github.com/yangshun/2048-python)
+   * [luliyucoordinate/Python2048](https://github.com/luliyucoordinate/Python2048)
+* JavaScript
+   * [gabrielecirulli/2048](https://github.com/gabrielecirulli/2048) - almost 10k stars
+      * [demo](https://play2048.co/)
+   * [GetMIT](https://mitchgu.github.io/GetMIT/)
 
 ### Article and Paper
 
