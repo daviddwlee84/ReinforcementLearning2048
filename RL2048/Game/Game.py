@@ -15,10 +15,6 @@ class ACTION(Enum):
     RIGHT = 2
     DOWN = 3
 
-class SCOREMODE(Enum):
-    ORIGINAL = 0
-    THREEEVAL = 1
-
 class Grid:
     def __init__(self, initGrid=None, initScore=0):
         if initGrid is not None:
@@ -37,20 +33,22 @@ class Grid:
         # DOWN:  Flip and Transpose
         temp_grid = np.rot90(self.__grid, action.value)
 
+        # Merge candidate to record whether the col of merge_candidate is merged
+        merged = np.zeros((GRID_LENGTH, GRID_LENGTH), dtype=np.bool)
+        # Merge to left
         for row in range(GRID_LENGTH):
             merge_candidate = -1
-            merged = np.zeros((GRID_LENGTH, ), dtype=np.bool)
             for col in range(GRID_LENGTH):
                 if temp_grid[row, col] == 0:
                     continue
                 
                 if (merge_candidate != -1 and
-                   not merged[merge_candidate] and
+                   not merged[row, merge_candidate] and
                    temp_grid[row, merge_candidate] == temp_grid[row, col]):
                     isShifted = True
                     # Merge tile with merge_candidate
                     temp_grid[row, col] = 0
-                    merged[merge_candidate] = True
+                    merged[row, merge_candidate] = True
                     temp_grid[row, merge_candidate] += 1
                     scoreGain += 2**temp_grid[row, merge_candidate]
                 else:
@@ -61,10 +59,13 @@ class Grid:
                         temp_grid[row, merge_candidate] = temp_grid[row, col]
                         temp_grid[row, col] = 0
         
-        self.__score += scoreGain
+        # print(np.rot90(merged, -action.value)) # To see which tile has been merged (debug)
+        self.__score += scoreGain # Update score
         return isShifted
 
     def genNewTile(self):
+        """Generate New Tile in random position"""
+
         x_pos, y_pos = np.where(self.__grid == 0)
         assert len(x_pos) != 0, "No space to generate new tile"
         empty_index = np.random.choice(len(x_pos))
@@ -84,9 +85,9 @@ class Grid:
         for row in range(GRID_LENGTH):
             for col in range(GRID_LENGTH):
                 # There is something can be merged
-                if row < 3 and self.__grid[row, col] == self.__grid[row+1, col]:
+                if row < GRID_LENGTH-1 and self.__grid[row, col] == self.__grid[row+1, col]:
                     return False
-                if col < 3 and self.__grid[row, col] == self.__grid[row, col+1]:
+                if col < GRID_LENGTH-1 and self.__grid[row, col] == self.__grid[row, col+1]:
                     return False
         return True
 
@@ -163,6 +164,9 @@ class Game:
 
     def printGrid(self):
         print(self.__currGrid.getState(original=True))
+    
+    def getCopyGrid(self):
+        return self.__currGrid.getCopyGrid()
 
     def printStatus(self):
         print("Round:", self.__nRound)
@@ -174,6 +178,7 @@ class Game:
         print("Move Count:", self.__lastMoveCount)
 
     def dumpLog(self, filename):
+        """Dump log to a file"""
         with open(filename, 'a') as log:
             log.write(f"\n=== Round: {self.__nRound} ===\n")
             log.write(f"Round Time: {self.__lastDuration}\n")
