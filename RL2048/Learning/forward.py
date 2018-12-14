@@ -77,8 +77,9 @@ def forward(system_input):
         tf.Variable -- Inference output of the model.
     """
 
-    y1 = denseLayer('Hidden Layer 1', system_input, INPUT_NODE, LAYER1_NODE, activation_function=ACTIVATION_FUNCTION)
-    y2 = denseLayer('Hidden Layer 2', y1, LAYER1_NODE, LAYER2_NODE, activation_function=ACTIVATION_FUNCTION)
-    y  = denseLayer('Inference Layer', y2, LAYER2_NODE, OUTPUT_NODE)
+    y1 = denseLayer('HiddenLayer1', system_input, INPUT_NODE, LAYER1_NODE, activation_function=ACTIVATION_FUNCTION)
+    y2 = denseLayer('HiddenLayer2', y1, LAYER1_NODE, LAYER2_NODE, activation_function=ACTIVATION_FUNCTION)
+    y  = denseLayer('InferenceLayer', y2, LAYER2_NODE, OUTPUT_NODE)
+    y_prob = tf.nn.softmax(y)
 
-    return y
+    return y, y_prob
