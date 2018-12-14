@@ -4,9 +4,30 @@ An AI BOT playing game 2048 by using reinforcement learning
 
 ## Overview
 
+### Demo
+
+### The Elements of 2048 Reinforcement Learning problem
+
+- Objective: Get the highest score / max tile. i.e. Live as long as it can while maintaining good board state.
+
+* State: An 4x4 grid with numbers of tiles in value of power of 2.
+* Action: Shift board UP, DOWN, LEFT, RIGHT
+* Reward: Increment of score or score with other metrics.
+
 ### Result
 
 ## Usage
+
+Basic Game Play
+
+```txt
+$ python3 RL2048/Game/Play.py
+Play mode:
+1. Keyboard (use w, a, s, d, exit with ^C or ^D)
+2. Random
+
+ select:
+```
 
 ## Heuristic
 
@@ -14,15 +35,21 @@ Artificial Intelligence: How many artifact, how many intelligence!
 
 ### Traditonal Tree-search algorithm
 
+The [Monte Carlo tree search](https://en.wikipedia.org/wiki/Monte_Carlo_tree_search) algorithm
+
 #### Minimax search with alpha-beta pruning
 
 * Monotonicity
 * Smoothness
 * Free Tiles
 
-### Deep Q Learning
+### Q-Learning in Deep Learning - Deep Q Network (DQN)
+
+### Policy Gradient in Deep Learning - Deep Deterministic Policy Gradient (DDPG)
 
 ## Links
+
+* [Reinforcement Learning Notes](https://github.com/daviddwlee84/DeepLearningPractice/blob/master/Notes/Technique/Reinforcement_Learning.md)
 
 ### Similar Project
 
