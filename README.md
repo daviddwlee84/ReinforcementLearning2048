@@ -57,3 +57,8 @@ Simple Game Play
 * [Reddit - TDL, N-Tuple Network](https://www.reddit.com/r/2048/comments/2s6m8o/2048_ai_that_has_a_97_win_rate_tdl_ntuple_network/) - 97% win rate
     * [paper](http://www.cs.put.poznan.pl/mszubert/pub/szubert2014cig.pdf)
     * [demo](https://solver2048.appspot.com/#)
+* [Stanford - AI Plays 2048](http://cs229.stanford.edu/proj2016/report/NieHouAn-AIPlays2048-report.pdf)
+
+### Others
+
+* [Key listener in Python](https://stackoverflow.com/questions/11918999/key-listeners-in-python)
