@@ -28,11 +28,15 @@ class Play:
 
         game = Game()
         
+        valid = True
+        isShift = False
         with raw_mode(sys.stdin):
             try:
                 while not game.gameOver:
-                    os.system('clear')
-                    game.printGrid()
+                    if valid:
+                        os.system('clear')
+                        print("Score:", game.getCopyGrid().getScore())
+                        game.printGrid()
 
                     ch = sys.stdin.read(1)
                     if not ch or ch == chr(4):
@@ -48,23 +52,28 @@ class Play:
                         action = ACTION.RIGHT
                     else:
                         print('Invalid input (use w, a, s, d)')
-                    
-                    game.doAction(action)
+                        valid = False
+                        continue
+                    isShift = game.doAction(action)
+                    if not isShift:
+                        print("Invalid direction (can't shift the board)")
+                    valid = isShift
                 else:
                     os.system('clear')
+                    print("Score:", game.getCopyGrid().getScore())
                     game.printGrid()
                     print('Game over')
             except (KeyboardInterrupt, EOFError):
                 pass
     def random(self, round=1):
         game = Game()
-        for _ in range(round):
+        for i in range(round):
             while not game.gameOver:
                 action = ACT_DICT[np.random.randint(0, 4)]
                 game.doAction(action)
             else:
                 game.dumpLog('random.log')
-                print('Game over')
+                print('Round', i+1, 'game over')
                 game.newGame()
 
 if __name__ == "__main__":
@@ -72,4 +81,4 @@ if __name__ == "__main__":
     if seleciton == 1:
         Play().keyboard()
     elif seleciton == 2:
-        Play().random(10)
+        Play().random(100)
