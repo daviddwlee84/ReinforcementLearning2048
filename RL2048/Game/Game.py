@@ -161,6 +161,9 @@ class Game:
             return isShift
         else:
             return False
+    
+    def getCurrentScore(self):
+        return self.__currGrid.getScore()
 
     def printGrid(self):
         print(self.__currGrid.getState(original=True))
