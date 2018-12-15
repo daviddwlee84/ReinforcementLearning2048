@@ -107,7 +107,7 @@ def get_train_op(loss, global_step, Optimizer):
 
     return train_op
 
-def backward(training_mode=TRAIN_MODE.NORMAL):
+def backward(training_mode=TRAIN_MODE.NORMAL, verbose=False):
     state_batch_placeholder = tf.placeholder(tf.float32, shape=[None, forward.INPUT_NODE], name="state_batch")
     rewards_placeholder = tf.placeholder(tf.float32, shape=[None, 1], name="rewards")
 
@@ -163,18 +163,21 @@ def backward(training_mode=TRAIN_MODE.NORMAL):
                     # Take random action under some probability
                     if step % 100 * np.random.uniform() > 80:
                         forceAction = Strategy(game.getCopyGrid()).RandomValidMove()
-                        print('FORCE')
                         randomMovement += 1
                     else:
                         forceAction = None
                 
                 reward, penalty = move_and_get_reward(actionNum[0], reward, game, penalty, forceAction)
-                os.system('clear')
-                print('Reward:', reward)
-                # print('Penalty:', penalty)
-                print('Loss:', sess.run(loss, feed_dict={state_batch_placeholder: state_batch, rewards_placeholder: [[reward]]}))
-                print('Action:', ACT_DICT[actionNum[0]])
-                game.printGrid()
+                if verbose:
+                    os.system('clear')
+                    print('Reward:', reward)
+                    # print('Penalty:', penalty)
+                    print('Loss:', sess.run(loss, feed_dict={state_batch_placeholder: state_batch, rewards_placeholder: [[reward]]}))
+                    if forceAction:
+                        print('Action:', forceAction, '(forced)')
+                    else:
+                        print('Action:', ACT_DICT[actionNum[0]])
+                    game.printGrid()
 
                 # sess.run(summary_op)
             else:
@@ -188,12 +191,12 @@ def backward(training_mode=TRAIN_MODE.NORMAL):
                 game.printGrid()
                 game.newGame()
             
-            print("Round", i+1, "gameover")
+            print("Current Training Round", i+1, "Game Over\n\n")
             saver.save(sess, MODEL_SAVE_PATH + MODEL_NAME)
             game.saveGame(GAME_STATUS_YAML)
 
 def main():
-    backward(training_mode=TRAIN_MODE.WITH_RANDOM)
+    backward(training_mode=TRAIN_MODE.WITH_RANDOM, verbose=True)
 
 if __name__ == '__main__':
     main()
