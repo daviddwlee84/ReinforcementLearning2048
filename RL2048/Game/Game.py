@@ -6,6 +6,8 @@ import numpy as np
 from enum import Enum
 import time
 
+import yaml
+
 GRID_LENGTH = 4
 INITIAL_TILE_NUM = 2
 
@@ -117,45 +119,47 @@ class Grid:
 
 class Game:
     def __init__(self, initGrid=None):
-        self.__nRound = 0
-        self.__lastMoveCount = 0
-        self.__lastScore = 0
-        self.__maxScore = 0
-        self.__scoreSum = 0
-        self.__startTime = time.time()
-        self.__lastDuration = 0
-        self.__maxTile = 0
+        self.__informationDict = {
+            'nRound': 0,
+            'lastMoveCount': 0,
+            'lastScore': 0,
+            'maxScore': 0,
+            'scoreSum': 0,
+            'startTime': time.time(),
+            'lastDuration': 0,
+            'maxTile': 0
+        }
         if initGrid:
-            self.__currGrid = initGrid
+            self.__informationDict['currGrid'] = initGrid
         else:
             self.newGame()
-        
+
     def __updateStatus(self):
-        currScore = self.__currGrid.getScore()
-        self.__lastScore = currScore
-        self.__scoreSum += currScore
-        self.__maxScore = max(self.__maxScore, currScore)
-        self.__maxTile = max(self.__currGrid.getMaxTail(), self.__maxTile)
-        self.__lastDuration = time.time() - self.__startTime
+        currScore = self.__informationDict['currGrid'].getScore()
+        self.__informationDict['lastScore'] = currScore
+        self.__informationDict['scoreSum'] += currScore
+        self.__informationDict['maxScore'] = max(self.__informationDict['maxScore'], currScore)
+        self.__informationDict['maxTile'] = max(self.__informationDict['currGrid'].getMaxTail(), self.__informationDict['maxTile'])
+        self.__informationDict['lastDuration'] = time.time() - self.__informationDict['startTime']
 
     def newGame(self):
-        self.__lastMoveCount = 0
-        self.__startTime = time.time()
-        self.__nRound += 1
+        self.__informationDict['lastMoveCount'] = 0
+        self.__informationDict['startTime'] = time.time()
+        self.__informationDict['nRound'] += 1
 
         self.gameOver = False
-        self.__currGrid = Grid()
+        self.__informationDict['currGrid'] = Grid()
         for _ in range(INITIAL_TILE_NUM):
-            self.__currGrid.genNewTile()
-        
+            self.__informationDict['currGrid'].genNewTile()
+
     def doAction(self, action):
         if not self.gameOver:
-            isShift = self.__currGrid.shift(action)
+            isShift = self.__informationDict['currGrid'].shift(action)
             # If shift then it is a valid movement
             if isShift:
-                self.__lastMoveCount += 1
-                self.__currGrid.genNewTile()
-            self.gameOver = self.__currGrid.isGameOver()
+                self.__informationDict['lastMoveCount'] += 1
+                self.__informationDict['currGrid'].genNewTile()
+            self.gameOver = self.__informationDict['currGrid'].isGameOver()
             if self.gameOver:
                 self.__updateStatus()
             return isShift
@@ -163,31 +167,72 @@ class Game:
             return False
     
     def getCurrentScore(self):
-        return self.__currGrid.getScore()
+        return self.__informationDict['currGrid'].getScore()
 
     def printGrid(self):
-        print(self.__currGrid.getState(original=True))
+        print(self.__informationDict['currGrid'].getState(original=True))
     
     def getCopyGrid(self):
-        return self.__currGrid.getCopyGrid()
+        return self.__informationDict['currGrid'].getCopyGrid()
 
     def printStatus(self):
-        print("Round:", self.__nRound)
-        print("Round Time:", self.__lastDuration)
-        print("Current Score:", self.__lastScore)
-        print("Highest Score:", self.__maxScore)
-        print("Average Score:", self.__scoreSum/self.__nRound)
-        print("Max Tile:", self.__maxTile)
-        print("Move Count:", self.__lastMoveCount)
+        print("Round:", self.__informationDict['nRound'])
+        print("Round Time:", self.__informationDict['lastDuration'])
+        print("Current Score:", self.__informationDict['lastScore'])
+        print("Highest Score:", self.__informationDict['maxScore'])
+        print("Average Score:", self.__informationDict['scoreSum']/self.__informationDict['nRound'])
+        print("Max Tile:", self.__informationDict['maxTile'])
+        print("Move Count:", self.__informationDict['lastMoveCount'])
 
     def dumpLog(self, filename):
         """Dump log to a file"""
         with open(filename, 'a') as log:
-            log.write(f"\n=== Round: {self.__nRound} ===\n")
-            log.write(f"Round Time: {self.__lastDuration}\n")
-            log.write(f"Current Score: {self.__lastScore}\n")
-            log.write(f"Highest Score: {self.__maxScore}\n")
-            log.write(f"Average Score: {self.__scoreSum/self.__nRound}\n")
-            log.write(f"Max Tile: {self.__maxTile}\n")
-            log.write(f"Move Count: {self.__lastMoveCount}\n")
-            log.write(f"Detail:\n {self.__currGrid.getState(original=True)}\n\n")
+            log.write(f"\n\n=== Round: {self.__informationDict['nRound']} ===\n")
+            log.write(f"Round Time: {self.__informationDict['lastDuration']}\n")
+            log.write(f"Current Score: {self.__informationDict['lastScore']}\n")
+            log.write(f"Highest Score: {self.__informationDict['maxScore']}\n")
+            log.write(f"Average Score: {self.__informationDict['scoreSum']/self.__informationDict['nRound']}\n")
+            log.write(f"Max Tile: {self.__informationDict['maxTile']}\n")
+            log.write(f"Move Count: {self.__informationDict['lastMoveCount']}\n")
+            log.write(f"Detail:\n {self.__informationDict['currGrid'].getState(original=True)}\n")
+
+    def saveGame(self, filename='game_status.yaml'):
+        with open(filename, 'w') as stream:
+            yaml.dump(self.__informationDict, stream=stream)
+
+    def restoreGame(self, filename='game_status.yaml'):
+        """Restore a Game from a yaml
+        
+        If file doesn't exist, ignore it.
+        """
+        try:
+            with open(filename, 'r') as stream:
+                self.__informationDict = yaml.load(stream)
+            return True
+        except:
+            return False
+
+if __name__ == "__main__":
+    print('=== Create a game ===')
+    game = Game()
+    game.printGrid()
+    game.printStatus()
+    game.saveGame('test.yaml')
+
+    print('\n=== Restore a game ===')
+    new_game = Game()
+    if new_game.restoreGame('test.yaml'):
+        print('Restored')
+    else:
+        print('Not restored')
+    new_game.printGrid()
+    new_game.printStatus()
+
+    print('\n=== Restore if no such file ===')
+    new_new_game = Game()
+    if new_new_game.restoreGame('DoesNotExist.yaml'):
+        print('Restored')
+    else:
+        print('Not restored')
+    new_new_game.printGrid()
+    new_new_game.printStatus()
