@@ -1,6 +1,9 @@
 from RL2048.Game.Game import ACTION, GRID_LENGTH
 from RL2048.Game.Game import Grid
+import RL2048.Learning.forward as forward
 import numpy as np
+
+MODEL_SAVE_PATH = "./model/"
 
 ACT_DICT = {0: ACTION.LEFT, 1: ACTION.UP, 2: ACTION.RIGHT, 3: ACTION.DOWN}
 
@@ -124,8 +127,24 @@ class Strategy:
             isShift = self.__grid_obj.shift(action)
         return action # Return only valid action
 
-    def PolicyGradientModel(self):
-        pass
+    # There is bug now (can't predict multiple action)
+    def PolicyGradientModel(self, ckpt_path=MODEL_SAVE_PATH):
+        import tensorflow as tf
+        state_batch_placeholder = tf.placeholder(tf.float32, shape=[None, forward.INPUT_NODE], name="state_batch")
+        _, action_prob = forward.forward(state_batch_placeholder)
+        get_action_num_op = tf.argmax(action_prob, 1)
+        saver = tf.train.Saver()
+        with tf.Session() as sess:
+            ckpt = tf.train.latest_checkpoint(ckpt_path)
+            if ckpt:
+                saver.restore(sess, ckpt)
+            else:
+                raise ValueError('ckpt not found')
+            state_batch = np.reshape(self.__grid, (1, forward.INPUT_NODE))
+            actionNum = sess.run([get_action_num_op],
+                        feed_dict={state_batch_placeholder: state_batch})
+            
+        return ACT_DICT[np.max(actionNum)] # Extract scalar from np array
 
     # Monte Carlo tree search
     def Minimax(self):
@@ -143,3 +162,6 @@ if __name__ == "__main__":
     print(Metrics(testGrid).ThreeEvalValueWithScore(10, 8, 2, 7))
 
     print(Strategy(testGrid).RandomValidMove())
+
+    print(Strategy(testGrid).PolicyGradientModel(MODEL_SAVE_PATH))
+    # print(Strategy(testGrid).PolicyGradientModel(MODEL_SAVE_PATH))
