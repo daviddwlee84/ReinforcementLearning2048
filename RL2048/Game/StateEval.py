@@ -2,6 +2,8 @@ from RL2048.Game.Game import ACTION, GRID_LENGTH
 from RL2048.Game.Game import Grid
 import numpy as np
 
+ACT_DICT = {0: ACTION.LEFT, 1: ACTION.UP, 2: ACTION.RIGHT, 3: ACTION.DOWN}
+
 # Human Heuristic
 # Return weighted score by some metrics
 class Metrics:
@@ -109,8 +111,25 @@ class Metrics:
         return score
 
 # Return action to take based on strategy
-class Strategy(Metrics):
-    pass
+class Strategy:
+
+    def __init__(self, grid_obj):
+        self.__grid_obj = grid_obj
+        self.__grid = grid_obj.getState()
+
+    def RandomValidMove(self):
+        isShift = False
+        while not isShift:
+            action = ACT_DICT[np.random.randint(0, 4)]
+            isShift = self.__grid_obj.shift(action)
+        return action # Return only valid action
+
+    def PolicyGradientModel(self):
+        pass
+
+    # Monte Carlo tree search
+    def Minimax(self):
+        pass
 
 if __name__ == "__main__":
     inputGrid = np.array([
@@ -122,3 +141,5 @@ if __name__ == "__main__":
     testGrid = Grid(initGrid=inputGrid, initScore=10)
     print(Metrics(testGrid).ThreeEvalValue(8, 2, 7))
     print(Metrics(testGrid).ThreeEvalValueWithScore(10, 8, 2, 7))
+
+    print(Strategy(testGrid).RandomValidMove())

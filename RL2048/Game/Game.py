@@ -107,7 +107,7 @@ class Grid:
             return self.__grid
 
     def getCopyGrid(self):
-        return Grid(initGrid=self.__grid, initScore=self.__score)
+        return Grid(initGrid=np.copy(self.__grid), initScore=self.__score)
 
     def getScore(self):
         return self.__score
@@ -135,13 +135,13 @@ class Game:
         self.__lastScore = currScore
         self.__scoreSum += currScore
         self.__maxScore = max(self.__maxScore, currScore)
-        self.__nRound += 1
         self.__maxTile = max(self.__currGrid.getMaxTail(), self.__maxTile)
         self.__lastDuration = time.time() - self.__startTime
 
     def newGame(self):
         self.__lastMoveCount = 0
         self.__startTime = time.time()
+        self.__nRound += 1
 
         self.gameOver = False
         self.__currGrid = Grid()

@@ -3,7 +3,7 @@ Play 2048 game
 """
 
 from RL2048.Game.Game import ACTION, Game
-from RL2048.Game.StateEval import Metrics
+from RL2048.Game.StateEval import Metrics, Strategy
 import numpy as np
 
 ACT_DICT = {0: ACTION.LEFT, 1: ACTION.UP, 2: ACTION.RIGHT, 3: ACTION.DOWN}
@@ -38,6 +38,7 @@ class Play:
                         grid = game.getCopyGrid()
                         print("Score:", game.getCurrentScore())
                         print("StateEval Score:", Metrics(grid).ThreeEvalValue(10, 2, 7))
+                        print("StateEval Score 2:", Metrics(grid).ThreeEvalValueWithScore(10, 10, 2, 7))
                         game.printGrid()
 
                     ch = sys.stdin.read(1)
@@ -68,11 +69,11 @@ class Play:
                     print('Game over')
             except (KeyboardInterrupt, EOFError):
                 pass
-    def random(self, round=1):
+    def random(self, play_round=1):
         game = Game()
-        for i in range(round):
+        for i in range(play_round):
             while not game.gameOver:
-                action = ACT_DICT[np.random.randint(0, 4)]
+                action = Strategy(game.getCopyGrid()).RandomValidMove()
                 game.doAction(action)
             else:
                 game.dumpLog('random.log')
