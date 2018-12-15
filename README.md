@@ -55,8 +55,10 @@ $ python3 RL2048/Learning/backward.py
 * Last game status: `training_game.yaml`
 * Training log: `training.log`
 
-> If you have trouble that can't find RL2048 module.
-> You sould make sure your workspace is in the main directory of this project
+> If you have trouble that can't find RL2048 module. (`ModuleNotFoundError: No module named 'RL2048'`)
+>
+> You sould make sure your workspace is in the main directory of this project.
+>
 > Or add the following lines to every top of the codes.
 
 ```py
@@ -87,9 +89,12 @@ The [Monte Carlo tree search](https://en.wikipedia.org/wiki/Monte_Carlo_tree_sea
 * Network is too stupid that it keep taking invalid aciton
 * Loss become too small and it seems that Network learned nothing in the first 100 round.
 
-## Links
+## Notes
 
 * [Reinforcement Learning Notes](https://github.com/daviddwlee84/DeepLearningPractice/blob/master/Notes/Technique/Reinforcement_Learning.md)
+* There is a more elegant way to store a class object in yaml format by defining it as a subclass of yaml.YAMLObject. ([PyYAML Documentation](https://pyyaml.org/wiki/PyYAMLDocumentation) - `Constructors, representers, resolvers` section)
+
+## Links
 
 ### Similar Project
 
