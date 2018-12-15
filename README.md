@@ -18,7 +18,13 @@ An AI BOT playing game 2048 by using reinforcement learning
 
 ## Usage
 
-Basic Game Play
+Dependencies
+
+* `tensorflow`
+* `numpy`
+* `pyyaml`
+
+### Basic Game Play
 
 ```txt
 $ python3 RL2048/Game/Play.py
@@ -27,6 +33,35 @@ Play mode:
 2. Random
 
  select:
+```
+
+* Keyboard mode
+* Random mode
+
+### Training model
+
+```txt
+$ python3 RL2048/Learning/backward.py
+```
+
+* TRAIN_MODE.NORMAL: Normal training process
+    * Use only NN itself
+* TRAIN_MODE.WITH_RANDOM
+    * With a little chance to move randomly
+
+### Default file locations
+
+* Model (ckpt): `./model`
+* Last game status: `training_game.yaml`
+* Training log: `training.log`
+
+> If you have trouble that can't find RL2048 module.
+> You sould make sure your workspace is in the main directory of this project
+> Or add the following lines to every top of the codes.
+
+```py
+import sys
+sys.path.append('/path/to/this/project/ReinforcementLearning2048')
 ```
 
 ## Heuristic
@@ -46,6 +81,11 @@ The [Monte Carlo tree search](https://en.wikipedia.org/wiki/Monte_Carlo_tree_sea
 ### Q-Learning in Deep Learning - Deep Q Network (DQN)
 
 ### Policy Gradient in Deep Learning - Deep Deterministic Policy Gradient (DDPG)
+
+## Problems
+
+* Network is too stupid that it keep taking invalid aciton
+* Loss become too small and it seems that Network learned nothing in the first 100 round.
 
 ## Links
 
