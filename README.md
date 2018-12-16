@@ -93,6 +93,10 @@ The [Monte Carlo tree search](https://en.wikipedia.org/wiki/Monte_Carlo_tree_sea
 * Network is too stupid that it keep taking invalid aciton
 * Loss become too small and it seems that Network learned nothing in the first 100 round.
 
+## TODO
+
+* [ ] Statistical analysis from log
+
 ## Notes
 
 * [Reinforcement Learning Notes](https://github.com/daviddwlee84/DeepLearningPractice/blob/master/Notes/Technique/Reinforcement_Learning.md)

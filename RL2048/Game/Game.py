@@ -181,7 +181,8 @@ class Game:
         print("Current Score:", self.__informationDict['lastScore'])
         print("Highest Score:", self.__informationDict['maxScore'])
         print("Average Score:", self.__informationDict['scoreSum']/self.__informationDict['nRound'])
-        print("Max Tile:", self.__informationDict['maxTile'])
+        print("Current Max Tile:", self.__informationDict['currGrid'].getMaxTail())
+        print("Max Tile Reach:", self.__informationDict['maxTile'])
         print("Move Count:", self.__informationDict['lastMoveCount'])
 
     def dumpLog(self, filename):
@@ -192,7 +193,8 @@ class Game:
             log.write(f"Current Score: {self.__informationDict['lastScore']}\n")
             log.write(f"Highest Score: {self.__informationDict['maxScore']}\n")
             log.write(f"Average Score: {self.__informationDict['scoreSum']/self.__informationDict['nRound']}\n")
-            log.write(f"Max Tile: {self.__informationDict['maxTile']}\n")
+            log.write(f"Current Max Tile: {self.__informationDict['currGrid'].getMaxTail()}\n")
+            log.write(f"Max Tile Reach: {self.__informationDict['maxTile']}\n")
             log.write(f"Move Count: {self.__informationDict['lastMoveCount']}\n")
             log.write(f"Detail:\n {self.__informationDict['currGrid'].getState(original=True)}\n")
 
