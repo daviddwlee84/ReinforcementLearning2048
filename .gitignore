@@ -4,6 +4,9 @@ model/
 # Gaming status
 *.yaml
 
+# Game Report
+StatisticsResult.md
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

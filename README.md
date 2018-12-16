@@ -49,11 +49,22 @@ $ python3 RL2048/Learning/backward.py
 * TRAIN_MODE.WITH_RANDOM
     * With a little chance to move randomly
 
+### Statistics Report
+
+```sh
+$ python3 RL2048/Report/Statistics.py
+```
+
+* Success Rate of Tiles
+* Scores Diagram (TODO)
+* Loss Diagram (TODO)
+
 ### Default file locations
 
 * Model (ckpt): `./model`
 * Last game status: `training_game.yaml`
 * Training log: `training.log`
+* Statistics report: `StatisticsResult.md`
 
 > If you have trouble that can't find RL2048 module. (`ModuleNotFoundError: No module named 'RL2048'`)
 >
