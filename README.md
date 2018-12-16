@@ -57,8 +57,12 @@ $ python3 RL2048/Learning/backward.py
 
 > If you have trouble that can't find RL2048 module. (`ModuleNotFoundError: No module named 'RL2048'`)
 >
-> You sould make sure your workspace is in the main directory of this project.
->
+> You sould make sure your workspace is in the main directory of this project. Then execute code like this.
+
+```sh
+export PYTHONPATH=$PYTHONPATH:/path/to/this/project/ReinforcementLearning2048; python3 RL2048/Learning/backward.py
+```
+
 > Or add the following lines to every top of the codes.
 
 ```py
