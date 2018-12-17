@@ -69,15 +69,15 @@ class Play:
                     print('Game over')
             except (KeyboardInterrupt, EOFError):
                 pass
-    def random(self, play_round=1):
+    def random(self, play_round=1, log='random.log'):
         game = Game()
         for i in range(play_round):
             while not game.gameOver:
                 action = Strategy(game.getCopyGrid()).RandomValidMove()
                 game.doAction(action)
             else:
-                game.dumpLog('random.log')
-                print('Round', i+1, 'game over')
+                game.dumpLog(log)
+                # print('Round', i+1, 'game over')
                 game.newGame()
 
 if __name__ == "__main__":

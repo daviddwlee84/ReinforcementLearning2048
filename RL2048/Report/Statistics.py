@@ -4,6 +4,7 @@ import os
 import numpy as np
 from collections import defaultdict
 import matplotlib.pyplot as plt
+from RL2048.Game.Play import Play
 
 REPORT_PATH = 'report'
 
@@ -83,13 +84,57 @@ class Performance:
              xytext=(-100, -30), textcoords='offset points', fontsize=10,
              arrowprops=dict(arrowstyle="->", connectionstyle="arc3, rad=-.2"))
 
-    def report(self, outputFile=None):
+    def __ScoreDiagramWithRandom(self):
+        """Compare performance with random play"""
+        
+        Scores = findTitleGetNumList('Current Score', self.__content)
+        
+        rounds = len(Scores)
+
+        x = np.linspace(1, rounds, num=rounds, dtype=np.int)
+
+        plt.figure(figsize=(10, 6))        
+        plt.plot(x, Scores, label='NN Score')
+
+        # Random
+        randomLog = 'random.log'
+        if not os.path.isfile(randomLog):
+            print(f'Playing {rounds} rounds Random games....')
+            Play().random(play_round=rounds, log=randomLog) # Play random
+        with open(randomLog, 'r') as log:
+            content = log.read()
+        randomScore = findTitleGetNumList('Current Score', content)
+
+        plt.plot(x, randomScore, label='Random Score')
+
+        plt.xticks(np.linspace(1, rounds, num=min(rounds, 10)))
+        plt.title('Score Diagram with Random')
+        plt.xlabel('Rounds')
+        plt.ylabel('Score')
+
+        maxScore = max(Scores)
+        plt.annotate(f'Max Score ({maxScore})',
+             xy=(Scores.index(maxScore), maxScore), xycoords='data',
+             xytext=(-100, -30), textcoords='offset points', fontsize=10,
+             arrowprops=dict(arrowstyle="->", connectionstyle="arc3, rad=-.2"))
+
+        plt.legend(loc='upper left', frameon=False)
+
+    def report(self, outputFile=None, compare=False):
         MaxTileRateDict = self.__MaxTileSuccessRate()
-        self.__ScoreDiagram()
         if outputFile: # dump to output file
             if not os.path.isdir(REPORT_PATH):
                 os.makedirs(REPORT_PATH)
             outputFile = os.path.join(REPORT_PATH, outputFile)
+
+            # Draw diagram and save
+            self.__ScoreDiagram()
+            plt.savefig(os.path.join(REPORT_PATH, "ScoreDiagram.png"))
+            if compare:
+                self.__ScoreDiagramWithRandom()
+                plt.savefig(os.path.join(REPORT_PATH, "ScoreDiagramWithRandom"))
+
+            # Generate report
             with open(outputFile, 'w') as title:
                 title.write('# Report of the 2048 Model #\n\n')
             # Success Rate of Tiles
@@ -99,17 +144,20 @@ class Performance:
                 result.write('----|------------\n')
                 for tile, rate in MaxTileRateDict.items():
                     result.write('%s|%.2f%%\n' % (tile, 100*rate))
-            # Score Diagram
-            plt.savefig(os.path.join(REPORT_PATH, "ScoreDiagram.png"))
+            # Score Diagrams
             with open(outputFile, 'a') as result:
                 result.write('\n## Score Diagram ##\n\n')
-                result.write('![Score Diagram](ScoreDiagram.png)')
+                result.write('![Score Diagram](ScoreDiagram.png)\n')
+                if compare:
+                    result.write('![Score Diagram with Random](ScoreDiagramWithRandom.png)\n')
         else: # stdout
             print('=== Report of the 2048 Model ===\n')
             print('== Success Rate of Tiles ==')
             print(MaxTileRateDict)
-            plt.show() # Score Diagram
+            self.__ScoreDiagram()
+            self.__ScoreDiagramWithRandom()
+            plt.show() # Plot all diagram
 
 if __name__ == "__main__":
-    Performance('training.log').report()
-    Performance('training.log').report('StatisticsResult.md')
+    Performance('training.log').report(compare=True)
+    Performance('training.log').report('StatisticsResult.md', compare=True)
