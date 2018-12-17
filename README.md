@@ -124,6 +124,7 @@ Use Machine Learning
 * [georgwiese/2048-rl](https://github.com/georgwiese/2048-rl)
     * [slides](https://docs.google.com/presentation/d/1I9RS3SMdMp8Uk9C6eyS6jK_w_34BKCrvkN-kWau1MU4/edit?usp=sharing)
 * [nneonneo/2048-ai](https://github.com/nneonneo/2048-ai)
+* [SergioIommi/DQN-2048](https://github.com/SergioIommi/DQN-2048) - with Keras
 * [navjindervirdee/2048-deep-reinforcement-learning](https://github.com/navjindervirdee/2048-deep-reinforcement-learning) - Max tile 4096, 10% win rate
 
 Use Traditional AI
@@ -131,6 +132,12 @@ Use Traditional AI
 * [daviddwlee84/2048-AI-BOT](https://github.com/daviddwlee84/2048-AI-BOT) - This was me and my friend Tom attending AI competition in 2014.
 * [ovolve/2048-AI](https://github.com/ovolve/2048-AI) - 90% win rate
     * [demo](https://ovolve.github.io/2048-AI/)
+* [jdleesmiller/twenty48](https://github.com/jdleesmiller/twenty48)
+    * [Blog](https://jdlm.info/)
+        * [The Mathematics of 2048: Counting States with Combinatorics](https://jdlm.info/articles/2017/09/17/counting-states-combinatorics-2048.html)
+        * [The Mathematics of 2048: Counting States by Exhaustive Enumeration](https://jdlm.info/articles/2017/12/10/counting-states-enumeration-2048.html)
+        * [The Mathematics of 2048: Optimal Play with Markov Decision Processes](https://jdlm.info/articles/2018/03/18/markov-decision-process-2048.html)
+        * [The Mathematics of 2048: Minimum Moves to Win with Markov Chains](https://jdlm.info/articles/2017/08/05/markov-chain-2048.html)
 
 Simple Game Play
 
@@ -150,6 +157,12 @@ Simple Game Play
     * [paper](http://www.cs.put.poznan.pl/mszubert/pub/szubert2014cig.pdf)
     * [demo](https://solver2048.appspot.com/#)
 * [Stanford - AI Plays 2048](http://cs229.stanford.edu/proj2016/report/NieHouAn-AIPlays2048-report.pdf)
+
+AlphaGo
+
+* [DeepMind - AlphaGo Zero: Learning from scratch](https://deepmind.com/blog/alphago-zero-learning-scratch/)
+* [AlphaGo Zero Explained In One Diagram](https://medium.com/applied-data-science/alphago-zero-explained-in-one-diagram-365f5abf67e0)
+* [How to build your own AlphaZero AI using Python and Keras](https://medium.com/applied-data-science/how-to-build-your-own-alphazero-ai-using-python-and-keras-7f664945c188)
 
 ### Others
 
