@@ -1,6 +1,33 @@
 import re
 import math
+import os
+import numpy as np
 from collections import defaultdict
+import matplotlib.pyplot as plt
+
+REPORT_PATH = 'report'
+
+# Helper function
+def findTitleGetNumList(subtitle, log):
+    """Extract integer followed after a subtitle in log content dump by Game.dumpLog()
+    
+    Arguments:
+        subtitle {string} -- Subtitle of an item
+        log {string} -- String stream of log file
+    
+    Returns:
+        list -- list contain all the integer
+    """
+
+    pattern = subtitle + r': \d+'
+    candidate_strings = re.findall(pattern, log)
+
+    resultList = []
+
+    for string in candidate_strings:
+        resultList.append(int(string.replace(subtitle + ':', '')))
+
+    return resultList
 
 class Performance:
     def __init__(self, trainingLog):
@@ -9,12 +36,8 @@ class Performance:
             self.__content = log.read()
     
     def __MaxTileSuccessRate(self):
-        CurrentMaxTileStrings = re.findall(r'Current Max Tile: \d+', self.__content)
-
-        MaxTiles = []
-
-        for CMTString in CurrentMaxTileStrings:
-            MaxTiles.append(int(CMTString.replace('Current Max Tile: ', '')))
+        
+        MaxTiles = findTitleGetNumList('Current Max Tile', self.__content)
 
         rounds = len(MaxTiles)
 
@@ -39,22 +62,52 @@ class Performance:
 
         return MaxTileRateDict
     
+    def __ScoreDiagram(self):
+        
+        Scores = findTitleGetNumList('Current Score', self.__content)
+        
+        rounds = len(Scores)
+
+        x = np.linspace(1, rounds, num=rounds, dtype=np.int)
+
+
+        plt.figure(figsize=(8, 4))        
+
+        plt.plot(x, Scores)
+
+        plt.xticks(np.linspace(1, rounds, num=min(rounds, 10)))
+
+        plt.title('Score Diagram')
+
+        plt.xlabel('Rounds')
+
+        plt.ylabel('Score')
+    
     def report(self, outputFile=None):
         MaxTileRateDict = self.__MaxTileSuccessRate()
+        self.__ScoreDiagram()
         if outputFile: # dump to output file
+            os.makedirs(REPORT_PATH)
+            outputFile = os.path.join(REPORT_PATH, outputFile)
             with open(outputFile, 'w') as title:
                 title.write('# Report of the 2048 Model #\n\n')
+            # Success Rate of Tiles
             with open(outputFile, 'a') as result:
                 result.write('## Success Rate of Tiles ##\n\n')
                 result.write('Tile|Success Rate\n')
                 result.write('----|------------\n')
                 for tile, rate in MaxTileRateDict.items():
-                    result.write(f'{tile}|{100*rate}%\n')
+                    result.write('%s|%.2f%%\n' % (tile, 100*rate))
+            # Score Diagram
+            plt.savefig(os.path.join(REPORT_PATH, "ScoreDiagram.png"))
+            with open(outputFile, 'a') as result:
+                result.write('\n## Score Diagram ##\n\n')
+                result.write('![Score Diagram](ScoreDiagram.png)')
         else: # stdout
             print('=== Report of the 2048 Model ===\n')
             print('== Success Rate of Tiles ==')
             print(MaxTileRateDict)
-            
+            plt.show() # Score Diagram
             
 if __name__ == "__main__":
     Performance('training.log').report()

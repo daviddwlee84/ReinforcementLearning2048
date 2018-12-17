@@ -5,7 +5,7 @@ model/
 *.yaml
 
 # Game Report
-StatisticsResult.md
+report/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
