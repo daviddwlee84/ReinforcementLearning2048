@@ -101,12 +101,13 @@ The [Monte Carlo tree search](https://en.wikipedia.org/wiki/Monte_Carlo_tree_sea
 
 ## Problems
 
-* Network is too stupid that it keep taking invalid aciton
+* Network is too stupid that it keep taking invalid aciton. = =
 * Loss become too small and it seems that Network learned nothing in the first 100 round.
 
-## TODO
+idea
 
-* [ ] Statistical analysis from log
+* Use Random build a history and use DQN to observe the pattern.
+* Use MCTS build a experience history, then teach DQN how to play directly.
 
 ## Notes
 
