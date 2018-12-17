@@ -70,24 +70,25 @@ class Performance:
 
         x = np.linspace(1, rounds, num=rounds, dtype=np.int)
 
-
-        plt.figure(figsize=(8, 4))        
-
+        plt.figure(figsize=(10, 6))        
         plt.plot(x, Scores)
-
         plt.xticks(np.linspace(1, rounds, num=min(rounds, 10)))
-
         plt.title('Score Diagram')
-
         plt.xlabel('Rounds')
-
         plt.ylabel('Score')
-    
+
+        maxScore = max(Scores)
+        plt.annotate(f'Max Score ({maxScore})',
+             xy=(Scores.index(maxScore), maxScore), xycoords='data',
+             xytext=(-100, -30), textcoords='offset points', fontsize=10,
+             arrowprops=dict(arrowstyle="->", connectionstyle="arc3, rad=-.2"))
+
     def report(self, outputFile=None):
         MaxTileRateDict = self.__MaxTileSuccessRate()
         self.__ScoreDiagram()
         if outputFile: # dump to output file
-            os.makedirs(REPORT_PATH)
+            if not os.path.isdir(REPORT_PATH):
+                os.makedirs(REPORT_PATH)
             outputFile = os.path.join(REPORT_PATH, outputFile)
             with open(outputFile, 'w') as title:
                 title.write('# Report of the 2048 Model #\n\n')
@@ -108,7 +109,7 @@ class Performance:
             print('== Success Rate of Tiles ==')
             print(MaxTileRateDict)
             plt.show() # Score Diagram
-            
+
 if __name__ == "__main__":
     Performance('training.log').report()
     Performance('training.log').report('StatisticsResult.md')
