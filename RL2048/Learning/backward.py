@@ -8,16 +8,21 @@ from enum import Enum
 
 ACT_DICT = {0: ACTION.LEFT, 1: ACTION.UP, 2: ACTION.RIGHT, 3: ACTION.DOWN}
 
-class TRAIN_MODE(Enum):
-    NORMAL = 0
-    WITH_RANDOM = 1
+class TRAIN(Enum):
+    BY_ITSELF = 0    # Train by itself
+    # As previous experience
+    # If learning by itself that it will keep doing invalid move
+    # and cause the training process very unefficient and meanless
+    # So it need some guide or teacher to take it
+    # either explore the world or teach it how to play
+    WITH_RANDOM = 1  # Train with epsilon decay random
+    WITH_MCTS = 2    # Train with Monte Carlo Tree Search (as a teacher)
+    TEST = -1        # Test mode
 
 OPTIMIZER_CLASS = tf.train.AdamOptimizer
 
 LEARNING_RATE_BASE = 1e-4  # Initial learning rate
 LEARNING_RATE_DECAY = 0.98 # Learning rate decate per 100K
-
-# GAMMA = 0.9 # Q-Learning
 
 MODEL_SAVE_PATH = "./model/"
 MODEL_NAME = "2048ai"
@@ -25,30 +30,36 @@ MODEL_NAME = "2048ai"
 LOG_FILE = "training.log"
 GAME_STATUS_YAML = "training_game.yaml" # store last game status
 
-PLAY_GAMES = 10000
+PLAY_GAMES = 1000000
 
-# def get_loss(q_values, targets, actions):
-#     # Get Q-Value prodections for the given actions
-#     batch_size = tf.shape(q_values)[0]
-#     q_value_indices = tf.range(0, batch_size) * 4 + actions
-#     relevant_q_values = tf.gather(tf.reshape(q_values, [-1]), q_value_indices)
+EPSILON_GREED = 0.8 # Maximum prob that take control by others
+EPSILON_MIN = 0.1   # Minimum prob
 
-#     # Compute L2 loss (tf.nn.l2_loss() doesn't seem to be available on CPU)
-#     return tf.reduce_mean(tf.pow(relevant_q_values - targets, 2))
-
-def get_loss(logits, action_prob, rewards_placeholder):
+def epsilon_greedy_prob(step):
+    """Decay of epsilon parameter
+    
+    from EPSILON_GREED to EPSILON_MIN
+    """
+    c = PLAY_GAMES / 2 / np.log(EPSILON_GREED / EPSILON_MIN)
+    x = EPSILON_GREED * np.exp(-step / c)
+    if x > EPSILON_MIN:
+    	return x
+    else:
+    	return EPSILON_MIN
+    
+def get_loss(logits, action_take_placeholder, rewards_placeholder):
     """Calculate negative reward as loss
     
     Arguments:
         logits {tf.Tensor} -- Output from network
-        action_prob {tf.Tensor} -- Softmax of output (i.e. probability distribution)
+        action_take_placeholder {tf.Tensor} -- Placeholder of action taken
         rewards_placeholder {tf.Tensor} -- Placehoder of reward value
     
     Returns:
         tf.Tensor -- loss
     """
 
-    neg_log_prob = tf.reduce_sum(-tf.log(action_prob) * tf.one_hot(tf.argmax(action_prob, 1), forward.OUTPUT_NODE), axis=1)
+    neg_log_prob = tf.reduce_sum(-tf.log(tf.nn.softmax(logits)) * tf.one_hot(action_take_placeholder, forward.OUTPUT_NODE), axis=1)
     return tf.reduce_mean(neg_log_prob * rewards_placeholder)
 
 def move_and_get_reward(action_num, last_reward, game_obj, cumulate_penalty, forceAction=None):
@@ -87,6 +98,7 @@ def move_and_get_reward(action_num, last_reward, game_obj, cumulate_penalty, for
     reward = min(-last_reward, 0)
     reward -= penalty
     reward += float(Metrics(grid).ThreeEvalValueWithScore(10, 10, 2, 7))
+    # reward += float(grid.getScore()) # Use pure score as reward
 
     return reward, penalty
     
@@ -102,20 +114,18 @@ def get_train_op(loss, global_step, Optimizer):
     optimizer = Optimizer(learning_rate)
     train_op = optimizer.minimize(loss, global_step=global_step)
     
-    # tf.summary.scalar("Learning Rate", learning_rate)
-    # tf.summary.scalar("Loss", loss)
-
     return train_op
 
-def backward(training_mode=TRAIN_MODE.NORMAL, verbose=False):
+def backward(training_mode=TRAIN.BY_ITSELF, verbose=False):
     state_batch_placeholder = tf.placeholder(tf.float32, shape=[None, forward.INPUT_NODE], name="state_batch")
+    target_action_placeholder = tf.placeholder(tf.int32, shape=[None, 1], name="aciton_target")
     rewards_placeholder = tf.placeholder(tf.float32, shape=[None, 1], name="rewards")
 
     logits, action_prob = forward.forward(state_batch_placeholder)
 
     get_action_num_op = tf.argmax(action_prob, 1)
 
-    loss = get_loss(logits, action_prob, rewards_placeholder)
+    loss = get_loss(logits, target_action_placeholder, rewards_placeholder)
 
     global_step = tf.Variable(0, name='global_step', trainable=False)
 
@@ -146,47 +156,65 @@ def backward(training_mode=TRAIN_MODE.NORMAL, verbose=False):
         forceAction = None
 
         for i in range(PLAY_GAMES):
-            randomMovement = 0
+            forceMove = 0
             while not game.gameOver:
                 state_batch = np.reshape(game.getCopyGrid().getState(), (1, forward.INPUT_NODE))
                 reward = float(game.getCurrentScore())
-                actionNum, step, _ = sess.run([get_action_num_op, global_step, train_op],
+
+                # Decision by Network
+                actionNum = sess.run(get_action_num_op, feed_dict={state_batch_placeholder: state_batch})
+
+                if forceAction:
+                    target_action = forceAction.value
+                else:
+                    target_action = actionNum[0]
+                
+                if training_mode != TRAIN.TEST:
+                    # Training mode
+                    step, _ = sess.run([global_step, train_op],
                                         feed_dict={
                                             state_batch_placeholder: state_batch,
+                                            target_action_placeholder: [[target_action]], # shape must be (?, 1)
                                             rewards_placeholder: [[reward]] # shape must be (?, 1)
                                         })
 
                 # Not sure if random move will mislead network to learn the wrong aciton
                 # that it thought it's good aciton since the random move did change the board
                 # and get the reward (not deserve to the network output)
-                if training_mode == TRAIN_MODE.WITH_RANDOM:
+                if training_mode == TRAIN.WITH_RANDOM:
                     # Take random action under some probability
-                    if step % 100 * np.random.uniform() > 80:
+                    if np.random.uniform() < epsilon_greedy_prob(i):
                         forceAction = Strategy(game.getCopyGrid()).RandomValidMove()
-                        randomMovement += 1
+                        forceMove += 1
                     else:
                         forceAction = None
-                
+                elif training_mode == TRAIN.WITH_MCTS:
+                    if np.random.uniform() < epsilon_greedy_prob(i):
+                        forceAction = Strategy(game.getCopyGrid()).MCTSDFS()
+                        forceMove += 1
+                    else:
+                        forceAction = None
+
                 reward, penalty = move_and_get_reward(actionNum[0], reward, game, penalty, forceAction)
                 if verbose:
                     os.system('clear')
                     print('Reward:', reward)
-                    # print('Penalty:', penalty)
-                    print('Loss:', sess.run(loss, feed_dict={state_batch_placeholder: state_batch, rewards_placeholder: [[reward]]}))
+                    if training_mode != TRAIN.TEST:
+                        print('Loss:', sess.run(loss, feed_dict={state_batch_placeholder: state_batch, rewards_placeholder: [[reward]], target_action_placeholder: [[target_action]]}))
                     if forceAction:
                         print('Action:', forceAction, '(forced)')
                     else:
                         print('Action:', ACT_DICT[actionNum[0]])
                     game.printGrid()
 
-                # sess.run(summary_op)
             else:
                 # When a game is over
                 game.dumpLog(LOG_FILE)
-                if training_mode == TRAIN_MODE.WITH_RANDOM:
+                if training_mode in (TRAIN.WITH_RANDOM, TRAIN.WITH_MCTS):
                     with open(LOG_FILE, 'a') as log:
-                        log.write(f"(Use {randomMovement} random steps)\n")
-                        
+                        log.write(f"(Use {forceMove} force steps with epsilon ({epsilon_greedy_prob(i)}))\n")
+
+                print('Epsilon:', epsilon_greedy_prob(i))
                 game.printStatus()
                 game.printGrid()
                 game.newGame()
@@ -196,7 +224,7 @@ def backward(training_mode=TRAIN_MODE.NORMAL, verbose=False):
             game.saveGame(GAME_STATUS_YAML)
 
 def main():
-    backward(training_mode=TRAIN_MODE.WITH_RANDOM, verbose=True)
+    backward(training_mode=TRAIN.WITH_MCTS, verbose=True)
 
 if __name__ == '__main__':
     main()
