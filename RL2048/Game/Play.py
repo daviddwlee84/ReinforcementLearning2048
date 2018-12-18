@@ -80,9 +80,26 @@ class Play:
                 # print('Round', i+1, 'game over')
                 game.newGame()
 
+    def vanilla_mcts(self, play_round=1, log='vanilla_mcts.log'):
+        import os
+        game = Game()
+        for i in range(play_round):
+            while not game.gameOver:
+                action = Strategy(game.getCopyGrid()).MCTSDFS(depth=2)
+                game.doAction(action)
+                os.system('clear')
+                print("Score:", game.getCopyGrid().getScore())
+                game.printGrid()
+            else:
+                print('Game over')
+                game.dumpLog(log)
+                game.newGame()
+
 if __name__ == "__main__":
-    seleciton = eval(input('Play mode:\n1. Keyboard (use w, a, s, d, exit with ^C or ^D)\n2. Random\n\n select: '))
-    if seleciton == 1:
+    selection = eval(input('Play mode:\n1. Keyboard (use w, a, s, d, exit with ^C or ^D)\n2. Random\n3. Vanilla MCTS\n\n select: '))
+    if selection == 1:
         Play().keyboard()
-    elif seleciton == 2:
+    elif selection == 2:
         Play().random(100)
+    elif selection == 3:
+        Play().vanilla_mcts(5)
