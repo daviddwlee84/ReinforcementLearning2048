@@ -56,7 +56,7 @@ $ python3 RL2048/Report/Statistics.py
 ```
 
 * Success Rate of Tiles
-* Scores Diagram (TODO)
+* Scores Diagram
 * Loss Diagram (TODO)
 
 ### Default file locations
@@ -64,7 +64,7 @@ $ python3 RL2048/Report/Statistics.py
 * Model (ckpt): `./model`
 * Last game status: `training_game.yaml`
 * Training log: `training.log`
-* Statistics report: `StatisticsResult.md`
+* Statistics report: `./report/StatisticsResult.md`
 
 > If you have trouble that can't find RL2048 module. (`ModuleNotFoundError: No module named 'RL2048'`)
 >
@@ -81,23 +81,26 @@ import sys
 sys.path.append('/path/to/this/project/ReinforcementLearning2048')
 ```
 
-## Heuristic
+## Policy Gradient
 
-Artificial Intelligence: How many artifact, how many intelligence!
+Heuristic: Artificial Intelligence: How many artifact, how many intelligence!
 
-### Traditonal Tree-search algorithm
+### Epsilon Decay
+
+With a decaly probability that take control by "Teacher".
+
+#### Random
+
+#### Traditonal Tree-search algorithm
 
 The [Monte Carlo tree search](https://en.wikipedia.org/wiki/Monte_Carlo_tree_search) algorithm
-
-#### Minimax search with alpha-beta pruning
 
 * Monotonicity
 * Smoothness
 * Free Tiles
+* Z-shape
 
-### Q-Learning in Deep Learning - Deep Q Network (DQN)
-
-### Policy Gradient in Deep Learning - Deep Deterministic Policy Gradient (DDPG)
+(Minimax search with alpha-beta pruning)
 
 ## Problems
 

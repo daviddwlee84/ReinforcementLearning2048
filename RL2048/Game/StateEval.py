@@ -1,7 +1,7 @@
-from RL2048.Game.Game import ACTION, GRID_LENGTH
-from RL2048.Game.Game import Grid
-import RL2048.Learning.forward as forward
+from RL2048.Game.Game import ACTION, GRID_LENGTH, Grid
+# import RL2048.Learning.forward as forward
 import numpy as np
+import operator
 
 MODEL_SAVE_PATH = "./model/"
 
@@ -13,7 +13,7 @@ class Metrics:
 
     def __init__(self, grid_obj):
         self.__grid_obj = grid_obj
-        self.__grid = grid_obj.getState()
+        self.__grid = grid_obj.getState() # This is in-place np.array
 
 # Shared single metric
 
@@ -81,7 +81,7 @@ class Metrics:
                     foundYdir = True
         return smooth
     
-    def __FreeTiles(self, grid):
+    def __FreeTiles(self, grid, log=False):
         """Free Tiles
         
         Empty space of board.
@@ -91,13 +91,93 @@ class Metrics:
         x_pos, _ = np.where(grid == 0)
         return len(x_pos)
     
-    def __ZShapeMonotonicity(self, grid):
+    def __ZShapeMonotonicity(self, grid, weightMatrixApproach=False):
         """Z-shape Monotonicity
         
         Put Largest tile in the corner and then follow the z-shape
         """
 
-        pass
+        if weightMatrixApproach:
+
+            maxScore = 0
+
+            # weightMat = np.array([
+            #     [100, 90, 70, 50],
+            #     [8, 10, 20, 30],
+            #     [7, 6, 5, 4],
+            #     [0, 1, 2, 3]
+            # ])
+
+            weightMat = np.array([
+                [15, 14, 13, 12],
+                [8, 9, 10, 11],
+                [7, 6, 5, 4],
+                [0, 1, 2, 3]
+            ])
+
+            weightMat = 2**weightMat
+
+            for direction in range(4):
+                mat = np.rot90(weightMat, direction)
+                maxScore = max(np.sum(np.dot(mat, grid)), maxScore)
+            weightMat = np.transpose(weightMat)
+            for direction in range(4):
+                mat = np.rot90(weightMat, direction)
+                maxScore = max(np.sum(np.dot(mat, grid)), maxScore)
+            return maxScore
+
+        else:
+
+            maxScore = 0
+
+            def indexToRowCol(index):
+                row = index // grid.shape[0]
+                idx = index % grid.shape[0]
+                if row % 2 == 0: # row 0, 2
+                    col = idx
+                else: # row 1, 3
+                    col = grid.shape[0] - idx - 1
+                return row, col
+
+            def calculateScore(tempGrid):
+                """
+                ---->
+                    |
+                <----
+                """
+                tempScore = 0
+                for i in range(grid.size-1):
+                    thisRow, thisCol = indexToRowCol(i)
+                    nextRow, nextCol = indexToRowCol(i+1)
+
+                    if tempGrid[thisRow, thisCol] > tempGrid[nextRow, nextCol]:
+                        tempScore += grid.size-i
+                    else:
+                        break
+
+                return tempScore
+
+            for direction in range(4):
+                # Search twice for each corner
+                
+                tempGrid = np.copy(grid)
+                tempGrid = np.rot90(tempGrid, direction)
+                tempScore = calculateScore(tempGrid)
+                maxScore = max(maxScore, tempScore)
+
+                tempGrid = tempGrid.T
+                tempScore = calculateScore(tempGrid)
+                maxScore = max(maxScore, tempScore)
+                
+            return maxScore
+
+    def __MaxTile(self, grid, normalize=True):
+        """Max Tile
+        """
+        if normalize:
+            return np.max(grid)
+        else:
+            return self.__grid_obj.getMaxTail()
 
 # Combinations
 
@@ -111,6 +191,12 @@ class Metrics:
     def ThreeEvalValueWithScore(self, scoreWeight=1, monotonicity=1, smoothness=1, free_tiles=1):
         score = scoreWeight * self.__grid_obj.getScore()
         score += self.ThreeEvalValue(monotonicity, smoothness, free_tiles)
+        return score
+
+    def NewEvalValue(self, monotonicity=1, smoothness=1, free_tiles=1, zshape=1):
+        score = 0
+        score += self.ThreeEvalValue(monotonicity, smoothness, free_tiles)
+        score += zshape * self.__ZShapeMonotonicity(self.__grid)
         return score
 
 # Return action to take based on strategy
@@ -128,26 +214,67 @@ class Strategy:
         return action # Return only valid action
 
     # There is bug now (can't predict multiple action)
-    def PolicyGradientModel(self, ckpt_path=MODEL_SAVE_PATH):
-        import tensorflow as tf
-        state_batch_placeholder = tf.placeholder(tf.float32, shape=[None, forward.INPUT_NODE], name="state_batch")
-        _, action_prob = forward.forward(state_batch_placeholder)
-        get_action_num_op = tf.argmax(action_prob, 1)
-        saver = tf.train.Saver()
-        with tf.Session() as sess:
-            ckpt = tf.train.latest_checkpoint(ckpt_path)
-            if ckpt:
-                saver.restore(sess, ckpt)
-            else:
-                raise ValueError('ckpt not found')
-            state_batch = np.reshape(self.__grid, (1, forward.INPUT_NODE))
-            actionNum = sess.run([get_action_num_op],
-                        feed_dict={state_batch_placeholder: state_batch})
+    # def PolicyGradientModel(self, ckpt_path=MODEL_SAVE_PATH):
+    #     import tensorflow as tf
+    #     state_batch_placeholder = tf.placeholder(tf.float32, shape=[None, forward.INPUT_NODE], name="state_batch")
+    #     _, action_prob = forward.forward(state_batch_placeholder)
+    #     get_action_num_op = tf.argmax(action_prob, 1)
+    #     saver = tf.train.Saver()
+    #     with tf.Session() as sess:
+    #         ckpt = tf.train.latest_checkpoint(ckpt_path)
+    #         if ckpt:
+    #             saver.restore(sess, ckpt)
+    #         else:
+    #             raise ValueError('ckpt not found')
+    #         state_batch = np.reshape(self.__grid, (1, forward.INPUT_NODE))
+    #         actionNum = sess.run([get_action_num_op],
+    #                     feed_dict={state_batch_placeholder: state_batch})
             
-        return ACT_DICT[np.max(actionNum)] # Extract scalar from np array
+    #     return ACT_DICT[np.max(actionNum)] # Extract scalar from np array
 
-    # Monte Carlo tree search
-    def Minimax(self):
+    # A recursive call helper
+    # Keep search and update reward
+    def __MCTSDFShelper(self, depth, lastGrid, rewardDict, subDir):
+        # print(depth, rewardDict, subDir)
+        # print(lastGrid.getState())
+
+        for temp_action in ACT_DICT.values():
+            tempGrid = lastGrid.getCopyGrid()
+            isShift = tempGrid.shift(temp_action)
+            reward = Metrics(tempGrid).ThreeEvalValueWithScore(10, 10, 2, 7) * isShift
+            rewardDict[subDir] = max(rewardDict[subDir], reward) # Update the maximum reward
+            if depth > 1 and isShift:
+                self.__MCTSDFShelper(depth-1, tempGrid, rewardDict, subDir)
+
+    # Basic version of MCTS using DFS
+    def MCTSDFS(self, depth=3):
+        rewardDict = {} # Store the maximum reward for each possible direction
+        for temp_action in ACT_DICT.values(): # Get each direction
+            tempGrid = self.__grid_obj.getCopyGrid() # Copy new grid
+            isShift = tempGrid.shift(temp_action) # Take action
+            reward = Metrics(tempGrid).ThreeEvalValueWithScore(10, 10, 2, 7) * isShift # if not isShift -> 0
+            rewardDict[temp_action] = reward
+            if depth > 1 and isShift: # Skip invalid search
+                self.__MCTSDFShelper(depth-1, tempGrid, rewardDict, temp_action)
+        
+        return max(rewardDict.items(), key=operator.itemgetter(1))[0]
+
+    # Monte Carlo Tree Search with Minimax
+    def MCTSMinimax(self, depth):
+        pass
+    
+    # Monte Carlo Tree Seach with Alpha-beta pruning (using DFS)
+    def MCTSAlphaBeta(self, depth, alpha, beta):
+        bestReward = 0
+        bestAction = None
+        # Alpha: Player turn
+
+        # Beta: Computer turn, do heavy pruning to keep the branching factor low.
+        # (try a 2 and 4 in each cell and measure how annoying it is with metrics)
+
+        # Pick out the most annoying moves
+        
+        # Search on each candidate
         pass
 
 if __name__ == "__main__":
@@ -157,11 +284,25 @@ if __name__ == "__main__":
         [2, 0, 0, 0],
         [8, 0, 0, 0]
     ])
-    testGrid = Grid(initGrid=inputGrid, initScore=10)
+    testGrid = Grid(initGrid=np.copy(inputGrid), initScore=10)
     print(Metrics(testGrid).ThreeEvalValue(8, 2, 7))
     print(Metrics(testGrid).ThreeEvalValueWithScore(10, 8, 2, 7))
+    print(Metrics(testGrid).NewEvalValue(1, 1, 1, 1))
 
+    # Random test
     print(Strategy(testGrid).RandomValidMove())
 
-    print(Strategy(testGrid).PolicyGradientModel(MODEL_SAVE_PATH))
+    # Network restore test
     # print(Strategy(testGrid).PolicyGradientModel(MODEL_SAVE_PATH))
+    # print(Strategy(testGrid).PolicyGradientModel(MODEL_SAVE_PATH))
+
+    # MCTS DFS test
+    inputGrid = np.array([
+        [2, 1, 0, 2],
+        [4, 3, 0, 0],
+        [2, 0, 2, 1],
+        [8, 3, 2, 1]
+    ])
+
+    testGrid = Grid(initGrid=np.copy(inputGrid), initScore=10)
+    print(Strategy(testGrid).MCTSDFS(depth=3))
