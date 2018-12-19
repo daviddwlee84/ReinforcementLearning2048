@@ -56,10 +56,10 @@ class OnehotGridPreprocessing:
     def FlattenBatch(self, depth=2, onehot=True):
         if onehot: # Return one-hot batch
             onehot_results = self.OneHotEncodingBatch(depth)
-            return np.reshape(onehot_results, reduce(lambda x, y: x*y, onehot_results.shape))
+            return np.reshape(onehot_results, (1, reduce(lambda x, y: x*y, onehot_results.shape)))
         else: # Return normal batch
             search_grids = self.GridSearchBatch(depth)
-            return np.reshape(search_grids, reduce(lambda x, y: x*y, search_grids.shape))
+            return np.reshape(search_grids, (1, reduce(lambda x, y: x*y, search_grids.shape)))
 
 if __name__ == "__main__":
     # GridSearch Test
