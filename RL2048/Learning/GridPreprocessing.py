@@ -1,5 +1,6 @@
 from RL2048.Game.Game import ACTION, Grid
 import numpy as np
+from functools import reduce # For cumulated product
 
 ACT_DICT = {0: ACTION.LEFT, 1: ACTION.UP, 2: ACTION.RIGHT, 3: ACTION.DOWN}
 
@@ -51,6 +52,15 @@ class OnehotGridPreprocessing:
         
         return np.array(grid_onehot_batch)
 
+    # Return a one-dimension flatten batch
+    def FlattenBatch(self, depth=2, onehot=True):
+        if onehot: # Return one-hot batch
+            onehot_results = self.OneHotEncodingBatch(depth)
+            return np.reshape(onehot_results, reduce(lambda x, y: x*y, onehot_results.shape))
+        else: # Return normal batch
+            search_grids = self.GridSearchBatch(depth)
+            return np.reshape(search_grids, reduce(lambda x, y: x*y, search_grids.shape))
+
 if __name__ == "__main__":
     # GridSearch Test
     inputGrid = np.array([
@@ -70,3 +80,6 @@ if __name__ == "__main__":
     
     print(np.shape(onehot_result))
     print(onehot_result)
+
+    flatten_result = OnehotGridPreprocessing(testGrid).FlattenBatch(2, onehot=True)
+    print(np.shape(flatten_result))
