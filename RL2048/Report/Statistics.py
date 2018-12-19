@@ -155,9 +155,10 @@ class Performance:
             print('== Success Rate of Tiles ==')
             print(MaxTileRateDict)
             self.__ScoreDiagram()
-            self.__ScoreDiagramWithRandom()
+            if compare:
+                self.__ScoreDiagramWithRandom()
             plt.show() # Plot all diagram
 
 if __name__ == "__main__":
-    Performance('training.log').report(compare=True)
-    Performance('training.log').report('StatisticsResult.md', compare=True)
+    Performance('training.log').report(compare=False)
+    Performance('training.log').report('StatisticsResult.md', compare=False)
