@@ -111,7 +111,15 @@ The main point is 2048 has a "local confort zone". That sometimes you need to ta
 * Network is too stupid that it keep taking invalid aciton. = =
 * Loss become too small and it seems that Network learned nothing in the first 100 round. -> Too small problem solved. But still learned nothing.
 
-idea
+MCTS Policy Gradient
+
+![MCTS Policy Gradient](image/MCTS_PolicyGradient.png)
+
+Random Policy Gradient
+
+![Random Policy Gradient](image/Random_PolicyGradient.png)
+
+**idea**:
 
 * Use Random build a history and use DQN to observe the pattern.
 * Use MCTS build a experience history, then teach DQN how to play directly.
