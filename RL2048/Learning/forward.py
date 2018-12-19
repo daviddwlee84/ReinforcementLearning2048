@@ -3,6 +3,18 @@ import tensorflow as tf
 INPUT_NODE = 16 # 4x4 grid
 OUTPUT_NODE = 4 # up, down, left, right
 
+DEPTH = 2
+ONEHOT_METRICS_PER_BATCH = 16 # 0, 2, 4, 8, ..., 2^15 => 16 grids
+
+def calcBatchNum(depth=DEPTH):
+    batch_num = 0
+    for i in range(depth, 0, -1):
+        batch_num += OUTPUT_NODE**i
+    return batch_num
+
+BATCH_NUM = calcBatchNum(DEPTH) # if depth = 2, batch_num = 4 + 4^2
+ONEHOT_INPUT = BATCH_NUM * ONEHOT_METRICS_PER_BATCH * INPUT_NODE # 5120
+
 # Policy Gradient
 LAYER1_NODE = 256
 LAYER2_NODE = 256
@@ -92,9 +104,9 @@ def forward(system_input):
 
     return y, y_prob
 
-# DQN
-def DQN_forward(system_input):
-    y1 = denseLayer('HiddenLayer1', system_input, INPUT_NODE, DQN_LAYER1, activation_function=ACTIVATION_FUNCTION)
+# DQN with one-hot input
+def DQN_onehot_forward(system_input):
+    y1 = denseLayer('HiddenLayer1', system_input, ONEHOT_INPUT, DQN_LAYER1, activation_function=ACTIVATION_FUNCTION)
     y2 = denseLayer('HiddenLayer2', y1, DQN_LAYER1, DQN_LAYER2, activation_function=ACTIVATION_FUNCTION)
     y3 = denseLayer('HiddenLayer3', y2, DQN_LAYER2, DQN_LAYER3, activation_function=ACTIVATION_FUNCTION)
     y  = denseLayer('InferenceLayer', y3, DQN_LAYER3, OUTPUT_NODE) # linear activation funciton
