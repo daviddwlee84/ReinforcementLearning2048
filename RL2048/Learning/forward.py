@@ -2,8 +2,15 @@ import tensorflow as tf
 
 INPUT_NODE = 16 # 4x4 grid
 OUTPUT_NODE = 4 # up, down, left, right
+
+# Policy Gradient
 LAYER1_NODE = 256
 LAYER2_NODE = 256
+
+# DQN
+DQN_LAYER1 = 1024
+DQN_LAYER2 = 512
+DQN_LAYER3 = 256
 
 WEIGHT_INIT_SCALE = 0.01
 REGULARIZER = 0.001
@@ -67,6 +74,7 @@ def denseLayer(name, input_tensor, input_size, layer_size, activation_function=l
 
     return output_tensor
 
+# Policy Gradient
 def forward(system_input):
     """Forward propagation (i.e. the model structure)
     
@@ -80,6 +88,16 @@ def forward(system_input):
     y1 = denseLayer('HiddenLayer1', system_input, INPUT_NODE, LAYER1_NODE, activation_function=ACTIVATION_FUNCTION)
     y2 = denseLayer('HiddenLayer2', y1, LAYER1_NODE, LAYER2_NODE, activation_function=ACTIVATION_FUNCTION)
     y  = denseLayer('InferenceLayer', y2, LAYER2_NODE, OUTPUT_NODE)
+    y_prob = tf.nn.softmax(y)
+
+    return y, y_prob
+
+# DQN
+def DQN_forward(system_input):
+    y1 = denseLayer('HiddenLayer1', system_input, INPUT_NODE, DQN_LAYER1, activation_function=ACTIVATION_FUNCTION)
+    y2 = denseLayer('HiddenLayer2', y1, DQN_LAYER1, DQN_LAYER2, activation_function=ACTIVATION_FUNCTION)
+    y3 = denseLayer('HiddenLayer3', y2, DQN_LAYER2, DQN_LAYER3, activation_function=ACTIVATION_FUNCTION)
+    y  = denseLayer('InferenceLayer', y3, DQN_LAYER3, OUTPUT_NODE) # linear activation funciton
     y_prob = tf.nn.softmax(y)
 
     return y, y_prob
