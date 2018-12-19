@@ -14,8 +14,6 @@ An AI BOT playing game 2048 by using reinforcement learning
 * Action: Shift board UP, DOWN, LEFT, RIGHT
 * Reward: Increment of score or score with other metrics.
 
-### Result
-
 ## Usage
 
 Dependencies
@@ -102,15 +100,32 @@ The [Monte Carlo tree search](https://en.wikipedia.org/wiki/Monte_Carlo_tree_sea
 
 (Minimax search with alpha-beta pruning)
 
-## Problems
+### Result of Policy Gradient
+
+We found that Policy Gradient is not a good approach for 2048.
+
+The main point is 2048 has a "local confort zone". That sometimes you need to take a negative action to move since the direction that you desired is invalid.
+
+#### Problems
 
 * Network is too stupid that it keep taking invalid aciton. = =
-* Loss become too small and it seems that Network learned nothing in the first 100 round.
+* Loss become too small and it seems that Network learned nothing in the first 100 round. -> Too small problem solved. But still learned nothing.
 
 idea
 
 * Use Random build a history and use DQN to observe the pattern.
 * Use MCTS build a experience history, then teach DQN how to play directly.
+
+## Deep Q-Learning (DQN)
+
+Improvement/Adjustment
+
+1. Grid preprocessing
+    * one-hot
+2. Feed a batch of status-action pair
+3. Loss function
+4. Q-Learning gamma
+5. Experience
 
 ## Notes
 
