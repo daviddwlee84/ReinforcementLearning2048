@@ -29,10 +29,14 @@ REGULARIZER = 0.001
 
 ACTIVATION_FUNCTION = tf.nn.relu
 
-def get_weight(shape, regularizer=REGULARIZER):
+EVAL_NET_COLLECTION = 'DQN_eval'
+TARGET_NET_COLLECTION = 'DQN_target'
+
+def get_weight(shape, collection=None, regularizer=REGULARIZER):
     """Generate random initial weight
     
     Arguments:
+        collection {str} -- Tensorflow collection (for direct variable access)
         shape {list} -- Shape of the weight. In FCNN is [LastLayerShape, CurrentLayerShape].
     
     Keyword Arguments:
@@ -42,28 +46,30 @@ def get_weight(shape, regularizer=REGULARIZER):
         tf.Variable -- Weight generated.
     """
 
-    w = tf.Variable(tf.truncated_normal(shape, stddev=WEIGHT_INIT_SCALE), name='weights')
+    w = tf.Variable(tf.truncated_normal(shape, stddev=WEIGHT_INIT_SCALE), name='weights', collections=collection)
     tf.add_to_collection('losses', tf.contrib.layers.l2_regularizer(regularizer)(w))
     return w
 
-def get_bias(shape):
+def get_bias(shape, collection=None):
     """Generate baias
     
     Arguments:
+        collection {str} -- Tensorflow collection (for direct variable access)
         shape {list} -- Shape of bias. Usually a single value list with CurrentLayerShape.
     
     Returns:
         tf.Variable -- Bias generated (initial 0).
     """
 
-    b = tf.Variable(tf.zeros(shape), name='biases')
+    b = tf.Variable(tf.zeros(shape), name='biases', collections=collection)
     return b
 
-def denseLayer(name, input_tensor, input_size, layer_size, activation_function=lambda x: x):
+def denseLayer(name, collection, input_tensor, input_size, layer_size, activation_function=lambda x: x):
     """Generate a dense layer (fully connected layer)
     
     Arguments:
         name {str} -- Name of the layer.
+        collection {str} -- Tensorflow collection (for direct variable access)
         input_tensor {tf.Variable} -- Tensor from the last layer.
         input_size {int} -- Number of input units. Usually the last layer size.
         layer_size {int} -- Number of units in this layer.
@@ -76,8 +82,8 @@ def denseLayer(name, input_tensor, input_size, layer_size, activation_function=l
     """
 
     with tf.name_scope(name):
-        weights = get_weight([input_size, layer_size])
-        biases = get_bias([layer_size])
+        weights = get_weight([input_size, layer_size], collection)
+        biases = get_bias([layer_size], collection)
         output_tensor = activation_function(tf.matmul(input_tensor, weights) + biases)
 
         tf.summary.histogram("Weights " + name, weights)
@@ -97,19 +103,28 @@ def forward(system_input):
         tf.Variable -- Inference output of the model.
     """
 
-    y1 = denseLayer('HiddenLayer1', system_input, INPUT_NODE, LAYER1_NODE, activation_function=ACTIVATION_FUNCTION)
-    y2 = denseLayer('HiddenLayer2', y1, LAYER1_NODE, LAYER2_NODE, activation_function=ACTIVATION_FUNCTION)
-    y  = denseLayer('InferenceLayer', y2, LAYER2_NODE, OUTPUT_NODE)
+    y1 = denseLayer('HiddenLayer1', 'policy_gradient', system_input, INPUT_NODE, LAYER1_NODE, activation_function=ACTIVATION_FUNCTION)
+    y2 = denseLayer('HiddenLayer2', 'policy_gradient', y1, LAYER1_NODE, LAYER2_NODE, activation_function=ACTIVATION_FUNCTION)
+    y  = denseLayer('InferenceLayer', 'policy_gradient', y2, LAYER2_NODE, OUTPUT_NODE)
     y_prob = tf.nn.softmax(y)
 
     return y, y_prob
 
 # DQN with one-hot input
 def DQN_onehot_forward(system_input):
-    y1 = denseLayer('HiddenLayer1', system_input, ONEHOT_INPUT, DQN_LAYER1, activation_function=ACTIVATION_FUNCTION)
-    y2 = denseLayer('HiddenLayer2', y1, DQN_LAYER1, DQN_LAYER2, activation_function=ACTIVATION_FUNCTION)
-    y3 = denseLayer('HiddenLayer3', y2, DQN_LAYER2, DQN_LAYER3, activation_function=ACTIVATION_FUNCTION)
-    y  = denseLayer('InferenceLayer', y3, DQN_LAYER3, OUTPUT_NODE) # linear activation funciton
+    y1 = denseLayer('HiddenLayer1', EVAL_NET_COLLECTION, system_input, ONEHOT_INPUT, DQN_LAYER1, activation_function=ACTIVATION_FUNCTION)
+    y2 = denseLayer('HiddenLayer2', EVAL_NET_COLLECTION, y1, DQN_LAYER1, DQN_LAYER2, activation_function=ACTIVATION_FUNCTION)
+    y3 = denseLayer('HiddenLayer3', EVAL_NET_COLLECTION, y2, DQN_LAYER2, DQN_LAYER3, activation_function=ACTIVATION_FUNCTION)
+    y  = denseLayer('InferenceLayer', EVAL_NET_COLLECTION, y3, DQN_LAYER3, OUTPUT_NODE) # linear activation funciton
     y_prob = tf.nn.softmax(y)
 
     return y, y_prob
+
+# DQN Target Network
+def DQN_onehot_delay_forward(system_input):
+    y1 = denseLayer('DelayHiddenLayer1', TARGET_NET_COLLECTION, system_input, ONEHOT_INPUT, DQN_LAYER1, activation_function=ACTIVATION_FUNCTION)
+    y2 = denseLayer('DelayHiddenLayer2', TARGET_NET_COLLECTION, y1, DQN_LAYER1, DQN_LAYER2, activation_function=ACTIVATION_FUNCTION)
+    y3 = denseLayer('DelayHiddenLayer3', TARGET_NET_COLLECTION, y2, DQN_LAYER2, DQN_LAYER3, activation_function=ACTIVATION_FUNCTION)
+    y  = denseLayer('DelayInferenceLayer', TARGET_NET_COLLECTION, y3, DQN_LAYER3, OUTPUT_NODE) # linear activation funciton
+
+    return y
