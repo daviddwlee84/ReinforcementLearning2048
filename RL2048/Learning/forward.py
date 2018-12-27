@@ -92,6 +92,10 @@ def denseLayer(name, collection, input_tensor, input_size, layer_size, activatio
 
     return output_tensor
 
+# Use tf.GraphKeys.GLOBAL_VARIABLES to solve the error
+# FailedPreconditionError: Attempting to use uninitialized value
+# (TensorFlow collection issue)
+
 # Policy Gradient
 def forward(system_input):
     """Forward propagation (i.e. the model structure)
@@ -103,28 +107,46 @@ def forward(system_input):
         tf.Variable -- Inference output of the model.
     """
 
-    y1 = denseLayer('HiddenLayer1', 'policy_gradient', system_input, INPUT_NODE, LAYER1_NODE, activation_function=ACTIVATION_FUNCTION)
-    y2 = denseLayer('HiddenLayer2', 'policy_gradient', y1, LAYER1_NODE, LAYER2_NODE, activation_function=ACTIVATION_FUNCTION)
-    y  = denseLayer('InferenceLayer', 'policy_gradient', y2, LAYER2_NODE, OUTPUT_NODE)
+    y1 = denseLayer('HiddenLayer1', ['policy_gradient', tf.GraphKeys.GLOBAL_VARIABLES], system_input, INPUT_NODE, LAYER1_NODE, activation_function=ACTIVATION_FUNCTION)
+    y2 = denseLayer('HiddenLayer2', ['policy_gradient', tf.GraphKeys.GLOBAL_VARIABLES], y1, LAYER1_NODE, LAYER2_NODE, activation_function=ACTIVATION_FUNCTION)
+    y  = denseLayer('InferenceLayer', ['policy_gradient', tf.GraphKeys.GLOBAL_VARIABLES], y2, LAYER2_NODE, OUTPUT_NODE)
     y_prob = tf.nn.softmax(y)
 
     return y, y_prob
 
+# DQN with raw input
+def DQN_raw_forward(system_input):
+    y1 = denseLayer('HiddenLayer1', [EVAL_NET_COLLECTION, tf.GraphKeys.GLOBAL_VARIABLES], system_input, INPUT_NODE, DQN_LAYER1, activation_function=ACTIVATION_FUNCTION)
+    y2 = denseLayer('HiddenLayer2', [EVAL_NET_COLLECTION, tf.GraphKeys.GLOBAL_VARIABLES], y1, DQN_LAYER1, DQN_LAYER2, activation_function=ACTIVATION_FUNCTION)
+    y3 = denseLayer('HiddenLayer3', [EVAL_NET_COLLECTION, tf.GraphKeys.GLOBAL_VARIABLES], y2, DQN_LAYER2, DQN_LAYER3, activation_function=ACTIVATION_FUNCTION)
+    y  = denseLayer('InferenceLayer', [EVAL_NET_COLLECTION, tf.GraphKeys.GLOBAL_VARIABLES], y3, DQN_LAYER3, OUTPUT_NODE) # linear activation funciton
+
+    return y
+
+# DQN Target Network
+def DQN_raw_delay_forward(system_input):
+    y1 = denseLayer('DelayHiddenLayer1', [TARGET_NET_COLLECTION, tf.GraphKeys.GLOBAL_VARIABLES], system_input, INPUT_NODE, DQN_LAYER1, activation_function=ACTIVATION_FUNCTION)
+    y2 = denseLayer('DelayHiddenLayer2', [TARGET_NET_COLLECTION, tf.GraphKeys.GLOBAL_VARIABLES], y1, DQN_LAYER1, DQN_LAYER2, activation_function=ACTIVATION_FUNCTION)
+    y3 = denseLayer('DelayHiddenLayer3', [TARGET_NET_COLLECTION, tf.GraphKeys.GLOBAL_VARIABLES], y2, DQN_LAYER2, DQN_LAYER3, activation_function=ACTIVATION_FUNCTION)
+    y  = denseLayer('DelayInferenceLayer', [TARGET_NET_COLLECTION, tf.GraphKeys.GLOBAL_VARIABLES], y3, DQN_LAYER3, OUTPUT_NODE) # linear activation funciton
+
+    return y
+
 # DQN with one-hot input
 def DQN_onehot_forward(system_input):
-    y1 = denseLayer('HiddenLayer1', EVAL_NET_COLLECTION, system_input, ONEHOT_INPUT, DQN_LAYER1, activation_function=ACTIVATION_FUNCTION)
-    y2 = denseLayer('HiddenLayer2', EVAL_NET_COLLECTION, y1, DQN_LAYER1, DQN_LAYER2, activation_function=ACTIVATION_FUNCTION)
-    y3 = denseLayer('HiddenLayer3', EVAL_NET_COLLECTION, y2, DQN_LAYER2, DQN_LAYER3, activation_function=ACTIVATION_FUNCTION)
-    y  = denseLayer('InferenceLayer', EVAL_NET_COLLECTION, y3, DQN_LAYER3, OUTPUT_NODE) # linear activation funciton
+    y1 = denseLayer('HiddenLayer1', [EVAL_NET_COLLECTION, tf.GraphKeys.GLOBAL_VARIABLES], system_input, ONEHOT_INPUT, DQN_LAYER1, activation_function=ACTIVATION_FUNCTION)
+    y2 = denseLayer('HiddenLayer2', [EVAL_NET_COLLECTION, tf.GraphKeys.GLOBAL_VARIABLES], y1, DQN_LAYER1, DQN_LAYER2, activation_function=ACTIVATION_FUNCTION)
+    y3 = denseLayer('HiddenLayer3', [EVAL_NET_COLLECTION, tf.GraphKeys.GLOBAL_VARIABLES], y2, DQN_LAYER2, DQN_LAYER3, activation_function=ACTIVATION_FUNCTION)
+    y  = denseLayer('InferenceLayer', [EVAL_NET_COLLECTION, tf.GraphKeys.GLOBAL_VARIABLES], y3, DQN_LAYER3, OUTPUT_NODE) # linear activation funciton
     y_prob = tf.nn.softmax(y)
 
     return y, y_prob
 
 # DQN Target Network
 def DQN_onehot_delay_forward(system_input):
-    y1 = denseLayer('DelayHiddenLayer1', TARGET_NET_COLLECTION, system_input, ONEHOT_INPUT, DQN_LAYER1, activation_function=ACTIVATION_FUNCTION)
-    y2 = denseLayer('DelayHiddenLayer2', TARGET_NET_COLLECTION, y1, DQN_LAYER1, DQN_LAYER2, activation_function=ACTIVATION_FUNCTION)
-    y3 = denseLayer('DelayHiddenLayer3', TARGET_NET_COLLECTION, y2, DQN_LAYER2, DQN_LAYER3, activation_function=ACTIVATION_FUNCTION)
-    y  = denseLayer('DelayInferenceLayer', TARGET_NET_COLLECTION, y3, DQN_LAYER3, OUTPUT_NODE) # linear activation funciton
+    y1 = denseLayer('DelayHiddenLayer1', [TARGET_NET_COLLECTION, tf.GraphKeys.GLOBAL_VARIABLES], system_input, ONEHOT_INPUT, DQN_LAYER1, activation_function=ACTIVATION_FUNCTION)
+    y2 = denseLayer('DelayHiddenLayer2', [TARGET_NET_COLLECTION, tf.GraphKeys.GLOBAL_VARIABLES], y1, DQN_LAYER1, DQN_LAYER2, activation_function=ACTIVATION_FUNCTION)
+    y3 = denseLayer('DelayHiddenLayer3', [TARGET_NET_COLLECTION, tf.GraphKeys.GLOBAL_VARIABLES], y2, DQN_LAYER2, DQN_LAYER3, activation_function=ACTIVATION_FUNCTION)
+    y  = denseLayer('DelayInferenceLayer', [TARGET_NET_COLLECTION, tf.GraphKeys.GLOBAL_VARIABLES], y3, DQN_LAYER3, OUTPUT_NODE) # linear activation funciton
 
     return y
