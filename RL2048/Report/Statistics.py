@@ -160,5 +160,8 @@ class Performance:
             plt.show() # Plot all diagram
 
 if __name__ == "__main__":
-    Performance('training.log').report(compare=False)
-    Performance('training.log').report('StatisticsResult.md', compare=False)
+    # Performance('training.log').report(compare=False)
+    # Performance('training.log').report('StatisticsResult.md', compare=False)
+    Performance('training_dqn.log').report(compare=False)
+    Performance('training_dqn.log').report('StatisticsResult.md', compare=False)
+    
