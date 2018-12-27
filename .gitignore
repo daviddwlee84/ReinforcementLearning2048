@@ -1,11 +1,15 @@
 # Network model
 model/
+model_dqn/
 
 # Gaming status
 *.yaml
 
 # Game Report
 report/
+
+# Memory object
+*.pickle
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
