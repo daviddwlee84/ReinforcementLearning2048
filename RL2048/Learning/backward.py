@@ -159,7 +159,6 @@ def backward(training_mode=TRAIN.BY_ITSELF, verbose=False):
             forceMove = 0
             while not game.gameOver:
                 state_batch = np.reshape(game.getCopyGrid().getState(), (1, forward.INPUT_NODE))
-                reward = float(game.getCurrentScore())
 
                 # Decision by Network
                 actionNum = sess.run(get_action_num_op, feed_dict={state_batch_placeholder: state_batch})
@@ -175,7 +174,7 @@ def backward(training_mode=TRAIN.BY_ITSELF, verbose=False):
                                         feed_dict={
                                             state_batch_placeholder: state_batch,
                                             target_action_placeholder: [[target_action]], # shape must be (?, 1)
-                                            rewards_placeholder: [[reward]] # shape must be (?, 1)
+                                            rewards_placeholder: [[float(reward)]] # shape must be (?, 1)
                                         })
 
                 # Not sure if random move will mislead network to learn the wrong aciton
